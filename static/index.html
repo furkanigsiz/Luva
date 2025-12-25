@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Luva — Akıllı AI e-posta asistanı. Gmail maillerinizi otomatik olarak sınıflandırır, önceliklendirir ve özetler. / Smart AI email assistant that automatically categorizes, prioritizes, and summarizes your Gmail messages.">
+    <meta name="keywords"
+        content="AI, Gmail, Assistant, Email Organizer, Productivity, Smart Inbox, Luva, Yapay Zeka, E-posta Düzenleyici">
+    <title>Luva — AI Email Assistant</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+    <div class="bg-mesh">
+        <div class="bg-glow-1"></div>
+        <div class="bg-glow-2"></div>
+        <div class="bg-grid"></div>
+    </div>
+    <div class="container">
+        <header>
+            <div>
+                <h1>Luva</h1>
+                <div id="status" class="status-badge" data-i18n="loading"></div>
+            </div>
+            <div class="header-meta">
+                <div class="controls">
+                    <button class="btn btn-primary sync-btn" onclick="refreshEmails()">
+                        <svg class="sync-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                        </svg>
+                        <span data-i18n="sync"></span>
+                    </button>
+                    <button class="btn" onclick="openSettings()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="3" />
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                        <span data-i18n="settings"></span>
+                    </button>
+                    <button class="btn" onclick="openAccountModal()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        <span data-i18n="account"></span>
+                    </button>
+                    <div class="lang-switcher">
+                        <button class="lang-btn active" data-lang="tr" onclick="setLanguage('tr')">TR</button>
+                        <button class="lang-btn" data-lang="en" onclick="setLanguage('en')">EN</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="filters-bar">
+            <div class="filter-item">
+                <label data-i18n="category"></label>
+                <select id="filterCategory" onchange="applyFilters()"></select>
+            </div>
+            <div class="filter-item">
+                <label data-i18n="priority"></label>
+                <select id="filterPriority" onchange="applyFilters()"></select>
+            </div>
+        </div>
+
+        <div id="emails">
+            <div style="text-align:center; padding:100px; color:var(--text-muted);" data-i18n="loading"></div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal">
+        <div class="modal-content">
+            <h2 class="modal-title" data-i18n="configuration"></h2>
+
+            <div class="form-group">
+                <label data-i18n="aiProvider"></label>
+                <select id="aiProvider" onchange="onProviderChange()"></select>
+            </div>
+
+            <div class="form-group">
+                <label data-i18n="model"></label>
+                <select id="aiModel"></select>
+            </div>
+
+            <div class="form-group">
+                <label data-i18n="apiKey"></label>
+                <div class="api-key-input">
+                    <input type="password" id="aiApiKey" data-i18n-placeholder="apiKeyPlaceholder">
+                    <button type="button" class="toggle-visibility" onclick="toggleApiKeyVisibility()">
+                        <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                            <circle cx="12" cy="12" r="3" />
+                        </svg>
+                    </button>
+                </div>
+                <small id="apiKeyHint"
+                    style="color:var(--text-muted); display:block; margin-top:8px; font-size:0.75rem;"></small>
+            </div>
+
+            <hr style="border:none; border-top:1px solid var(--border); margin:24px 0;">
+
+            <div class="form-group">
+                <label data-i18n="syncTime"></label>
+                <div class="time-inputs">
+                    <input type="number" id="fetchHour" min="0" max="23" value="10">
+                    <span style="font-size: 1.5rem; opacity: 0.5;">:</span>
+                    <input type="number" id="fetchMinute" min="0" max="59" value="0">
+                </div>
+            </div>
+            <div id="lastFetchInfo" style="color:var(--text-muted); font-size:0.8rem; margin-bottom:30px;"></div>
+            <div style="display:flex; gap:12px;">
+                <button class="btn btn-primary" style="flex:1; justify-content:center;" onclick="saveSettings()"
+                    data-i18n="apply"></button>
+                <button class="btn" style="flex:1; justify-content:center;" onclick="closeSettings()"
+                    data-i18n="close"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Modal -->
+    <div id="accountModal" class="modal">
+        <div class="modal-content">
+            <h2 class="modal-title" data-i18n="accountManagement"></h2>
+
+            <div id="accountInfo" class="account-info">
+                <div class="account-status">
+                    <span id="accountEmail"></span>
+                    <span id="accountBadge" class="badge"></span>
+                </div>
+                <div id="emailsCount" class="stat-item"></div>
+            </div>
+
+            <hr style="border:none; border-top:1px solid var(--border); margin:24px 0;">
+
+            <div class="form-group">
+                <label data-i18n="gmailAccount"></label>
+                <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                    <button class="btn" onclick="connectGmail()" id="connectBtn" data-i18n="connectGmail"></button>
+                    <button class="btn btn-danger" onclick="logout()" id="logoutBtn" style="display:none;"
+                        data-i18n="logout"></button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label data-i18n="dataManagement"></label>
+                <button class="btn btn-danger" onclick="clearAllData()" data-i18n="clearData"></button>
+                <small style="color:var(--text-muted); display:block; margin-top:8px;"
+                    data-i18n="clearDataHint"></small>
+            </div>
+
+            <hr style="border:none; border-top:1px solid var(--border); margin:24px 0;">
+
+            <div style="display:flex; gap:12px;">
+                <button class="btn" style="flex:1; justify-content:center;" onclick="openSetupWizard()"
+                    data-i18n="setupWizard"></button>
+                <button class="btn" style="flex:1; justify-content:center;" onclick="closeAccountModal()"
+                    data-i18n="close"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Setup Wizard Modal -->
+    <div id="setupModal" class="modal">
+        <div class="modal-content" style="max-width:600px;">
+            <h2 class="modal-title" data-i18n="setupWizard"></h2>
+
+            <div class="setup-steps">
+                <div class="setup-step">
+                    <div class="step-header">
+                        <span class="step-number">1</span>
+                        <span class="step-title" data-i18n="step1Title"></span>
+                    </div>
+                    <div class="step-content" id="step1Content"></div>
+                </div>
+
+                <div class="setup-step">
+                    <div class="step-header">
+                        <span class="step-number">2</span>
+                        <span class="step-title" data-i18n="step2Title"></span>
+                    </div>
+                    <div class="step-content" id="step2Content"></div>
+                </div>
+
+                <div class="setup-step">
+                    <div class="step-header">
+                        <span class="step-number">3</span>
+                        <span class="step-title" data-i18n="step3Title"></span>
+                    </div>
+                    <div class="step-content" id="step3Content"></div>
+                </div>
+
+                <div class="setup-step">
+                    <div class="step-header">
+                        <span class="step-number">4</span>
+                        <span class="step-title" data-i18n="step4Title"></span>
+                    </div>
+                    <div class="step-content">
+                        <div id="step4Instructions"></div>
+                        <div class="form-group" style="margin-top:20px;">
+                            <label data-i18n="clientId"></label>
+                            <input type="text" id="setupClientId" placeholder="xxxxx.apps.googleusercontent.com">
+                        </div>
+                        <div class="form-group">
+                            <label data-i18n="clientSecret"></label>
+                            <input type="password" id="setupClientSecret" placeholder="GOCSPX-xxxxx">
+                        </div>
+                        <button class="btn btn-primary" onclick="saveOAuthConfig()" data-i18n="saveOAuth"></button>
+                    </div>
+                </div>
+
+                <div class="setup-step">
+                    <div class="step-header">
+                        <span class="step-number">5</span>
+                        <span class="step-title" data-i18n="step5Title"></span>
+                    </div>
+                    <div class="step-content" id="step5Content"></div>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:12px; margin-top:24px;">
+                <button class="btn" style="flex:1; justify-content:center;" onclick="closeSetupWizard()"
+                    data-i18n="close"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>
