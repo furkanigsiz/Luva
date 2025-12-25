@@ -18,6 +18,9 @@ import (
 //go:embed static/*
 var staticFiles embed.FS
 
+//go:embed api_server.py gmail_classifier.py requirements.txt
+var pythonFiles embed.FS
+
 type Email struct {
 	ID       string `json:"id"`
 	Subject  string `json:"subject"`
@@ -36,8 +39,15 @@ type APIResponse struct {
 }
 
 var pythonCmd *exec.Cmd
+var appDir string
 
 func main() {
+	// Uygulama dizinini belirle (exe'nin yanında veya AppData)
+	appDir = getAppDir()
+	
+	// Python dosyalarını extract et
+	extractPythonFiles()
+	
 	// Python API server'ı başlat
 	go startPythonServer()
 	time.Sleep(2 * time.Second)
@@ -69,10 +79,9 @@ func main() {
 }
 
 func startPythonServer() {
-	dir, _ := os.Getwd()
-	pythonScript := filepath.Join(dir, "api_server.py")
+	pythonScript := filepath.Join(appDir, "api_server.py")
 	pythonCmd = exec.Command("python", pythonScript)
-	pythonCmd.Dir = dir
+	pythonCmd.Dir = appDir
 	pythonCmd.Stdout = os.Stdout
 	pythonCmd.Stderr = os.Stderr
 	err := pythonCmd.Start()
@@ -80,6 +89,41 @@ func startPythonServer() {
 		fmt.Println("❌ Python başlatılamadı:", err)
 	} else {
 		fmt.Println("✓ Python server başlatıldı")
+	}
+}
+
+func getAppDir() string {
+	// Exe'nin bulunduğu dizini kullan
+	exe, err := os.Executable()
+	if err != nil {
+		return "."
+	}
+	return filepath.Dir(exe)
+}
+
+func extractPythonFiles() {
+	files := []string{"api_server.py", "gmail_classifier.py", "requirements.txt"}
+	
+	for _, name := range files {
+		destPath := filepath.Join(appDir, name)
+		
+		// Dosya zaten varsa atla (kullanıcı değiştirmiş olabilir)
+		if _, err := os.Stat(destPath); err == nil {
+			continue
+		}
+		
+		data, err := pythonFiles.ReadFile(name)
+		if err != nil {
+			fmt.Printf("❌ %s okunamadı: %v\n", name, err)
+			continue
+		}
+		
+		err = os.WriteFile(destPath, data, 0644)
+		if err != nil {
+			fmt.Printf("❌ %s yazılamadı: %v\n", name, err)
+		} else {
+			fmt.Printf("✓ %s çıkarıldı\n", name)
+		}
 	}
 }
 
