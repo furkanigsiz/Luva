@@ -732,9 +732,9 @@ async function saveOAuthConfig() {
         const data = await resp.json();
         
         if (data.success) {
-            alert(t('oauthSaved'));
             closeSetupWizard();
-            openAccountModal();
+            // OAuth kaydedildi, şimdi AI API key için Settings aç
+            openSettings();
         } else {
             alert(t('error') + ': ' + data.error);
         }
