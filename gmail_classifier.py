@@ -61,12 +61,19 @@ class AIProvider:
     }
     
     def __init__(self):
+        self.reload_settings()
+    
+    def reload_settings(self):
+        """Settings'i yeniden yükler."""
         self.settings = load_ai_settings()
         self.provider = self.settings.get("ai_provider", "gemini")
         self.model = self.settings.get("ai_model", self.PROVIDERS[self.provider]["default"])
         self.api_key = self.settings.get("ai_api_key", os.getenv("GEMINI_API_KEY", ""))
     
     def generate(self, prompt: str) -> str:
+        # Her çağrıda settings'i yeniden oku
+        self.reload_settings()
+        
         if self.provider == "gemini":
             return self._gemini(prompt)
         elif self.provider == "openai":
