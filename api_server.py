@@ -244,6 +244,11 @@ class APIHandler(BaseHTTPRequestHandler):
                 "new_count": len(new_emails),
                 "from_cache": False
             })
+        except FileNotFoundError as e:
+            if "OAuth not configured" in str(e):
+                self.send_json({"error": "setup_required", "message": "Please complete setup wizard first"}, 400)
+            else:
+                self.send_json({"error": str(e)}, 500)
         except Exception as e:
             import traceback
             traceback.print_exc()
@@ -348,6 +353,11 @@ class APIHandler(BaseHTTPRequestHandler):
                 "new_count": len(new_emails)
             })
             
+        except FileNotFoundError as e:
+            if "OAuth not configured" in str(e):
+                send_event("error", {"message": "setup_required", "detail": "Please complete setup wizard first"})
+            else:
+                send_event("error", {"message": str(e)})
         except Exception as e:
             import traceback
             traceback.print_exc()

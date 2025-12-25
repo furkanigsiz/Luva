@@ -119,6 +119,10 @@ class GmailClassifier:
         token_path = os.path.join(os.path.dirname(__file__), 'token.json')
         client_path = os.path.join(os.path.dirname(__file__), 'client.json')
         
+        # OAuth yapılandırılmamışsa hata ver
+        if not os.path.exists(client_path):
+            raise FileNotFoundError("OAuth not configured. Please complete setup wizard first.")
+        
         if os.path.exists(token_path):
             creds = Credentials.from_authorized_user_file(token_path, SCOPES)
         
