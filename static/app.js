@@ -377,7 +377,20 @@ async function refreshEmails() {
             try {
                 if (e.data) {
                     const data = JSON.parse(e.data);
-                    status.textContent = '✗ ' + t('error') + ': ' + data.message;
+                    
+                    // Setup required - open setup wizard
+                    if (data.message === 'setup_required') {
+                        status.textContent = t('setupRequired');
+                        openSetupWizard();
+                    }
+                    // AI key required - open settings
+                    else if (data.message === 'ai_key_required') {
+                        status.textContent = currentLang === 'en' ? 'AI API key required' : 'AI API anahtarı gerekli';
+                        openSettings();
+                    }
+                    else {
+                        status.textContent = '✗ ' + t('error') + ': ' + data.message;
+                    }
                 }
             } catch (err) {
                 status.textContent = t('connectionError');

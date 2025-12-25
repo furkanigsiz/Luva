@@ -319,6 +319,12 @@ class APIHandler(BaseHTTPRequestHandler):
                 })
                 return
             
+            # AI API key kontrolü
+            settings = load_settings()
+            if not settings.get("ai_api_key"):
+                send_event("error", {"message": "ai_key_required", "detail": "Please configure AI API key in Settings"})
+                return
+            
             # AI sınıflandırma
             send_event("progress", {"step": "classify", "message": "AI ile sınıflandırılıyor..."})
             classified = APIHandler.classifier.classify_emails(emails)
